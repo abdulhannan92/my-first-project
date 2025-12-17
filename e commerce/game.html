@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Game Dev Portfolio — Replace with Client Name</title>
+  <meta name="description" content="A colourful, large gaming portfolio with 3D background effect. Built with HTML, CSS and JS (Three.js) — replace content & logo as needed." />
+
+  <!-- Three.js for 3D background effect -->
+  <script src="https://unpkg.com/three@0.152.2/build/three.min.js"></script>
+
+  <style>
+    :root{
+      --bg:#0b0f1a;
+      --accent1:#7c5cff;
+      --accent2:#00f5a0;
+      --accent3:#ff4d6d;
+      --glass:rgba(255,255,255,0.06);
+      --glass-2:rgba(255,255,255,0.03);
+      --text:#eaf2ff;
+      --muted:#b0c3db;
+      --max-width:1200px;
+      --radius:16px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial}
+    body{background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+
+    /* Fullscreen canvas for 3D effect */
+    #bg-canvas{position:fixed;inset:0;z-index:0;width:100%;height:100%;display:block}
+
+    /* Page layout */
+    .wrap{position:relative;z-index:2;max-width:var(--max-width);margin:0 auto;padding:48px 24px}
+    header{display:flex;align-items:center;justify-content:space-between;gap:20px}
+    .logo-area{display:flex;align-items:center;gap:12px}
+    .logo{width:76px;height:76px;border-radius:12px;background:linear-gradient(135deg,var(--accent1),var(--accent3));display:flex;align-items:center;justify-content:center;font-weight:800;letter-spacing:1px;font-size:20px;color:#0b0f1a}
+    .logo img{max-width:100%;height:100%;object-fit:cover;border-radius:12px}
+    nav{display:flex;gap:18px;align-items:center}
+    nav a{color:var(--muted);text-decoration:none;padding:8px 12px;border-radius:10px}
+    nav a:hover{color:var(--text);background:var(--glass)}
+
+    /* Hero */
+    .hero{display:grid;grid-template-columns:1fr 420px;gap:32px;align-items:center;margin-top:36px}
+    .hero-left{padding:28px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:20px;backdrop-filter: blur(6px);box-shadow: 0 8px 30px rgba(2,6,23,0.6)}
+    .kicker{color:var(--accent2);font-weight:700;margin-bottom:12px}
+    h1{margin:0;font-size:40px;line-height:1.02}
+    p.lead{color:var(--muted);margin-top:12px}
+    .cta-row{display:flex;gap:12px;margin-top:20px}
+    .btn{padding:12px 18px;border-radius:12px;border:0;cursor:pointer;font-weight:700}
+    .btn-primary{background:linear-gradient(90deg,var(--accent1),var(--accent2));color:#031018}
+    .btn-outline{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--text)}
+
+    /* Right column: preview / wallpaper */
+    .hero-right{height:360px;border-radius:16px;overflow:hidden;position:relative;background:linear-gradient(135deg,var(--accent3),var(--accent1));display:flex;align-items:center;justify-content:center}
+    .hero-right .mock{width:88%;height:80%;background:url('https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.0.3&s=') center/cover no-repeat;border-radius:12px;box-shadow:0 10px 30px rgba(2,6,23,0.6)}
+    .logo-behind{position:absolute;inset:auto auto 12px 12px;opacity:0.18;transform:rotate(-12deg);filter:blur(1px)}
+
+    /* Sections */
+    section{margin-top:44px}
+    .card{background:var(--glass);padding:20px;border-radius:16px}
+
+    /* Projects grid */
+    .projects-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+    .project{height:220px;border-radius:12px;overflow:hidden;position:relative;background:linear-gradient(180deg, rgba(0,0,0,0.06), rgba(255,255,255,0.02));display:flex;flex-direction:column}
+    .project img{width:100%;height:100%;object-fit:cover}
+    .project .meta{position:absolute;left:12px;bottom:12px;background:var(--glass-2);padding:8px 10px;border-radius:10px;color:var(--text);font-weight:700}
+
+    /* Gallery / wallpapers */
+    .wallpapers{display:flex;gap:12px;overflow:auto;padding:12px}
+    .wallpaper{min-width:260px;height:160px;border-radius:10px;background-size:cover;background-position:center;flex-shrink:0}
+
+    /* About + contact */
+    .two-col{display:grid;grid-template-columns:1fr 380px;gap:20px}
+
+    footer{margin-top:64px;padding:28px 0;color:var(--muted);text-align:center}
+
+    /* Responsive */
+    @media (max-width:980px){
+      .hero{grid-template-columns:1fr;}
+      .projects-grid{grid-template-columns:repeat(2,1fr)}
+      .two-col{grid-template-columns:1fr}
+    }
+    @media (max-width:560px){
+      .projects-grid{grid-template-columns:1fr}
+      .logo{width:56px;height:56px;font-size:16px}
+      h1{font-size:28px}
+    }
+
+    /* Floating badges for latest tags */
+    .tag-cloud{display:flex;gap:8px;flex-wrap:wrap}
+    .tag{background:linear-gradient(90deg,var(--accent2),var(--accent1));padding:6px 10px;border-radius:999px;font-weight:700;color:#041018}
+
+  </style>
+</head>
+<body>
+  <!-- 3D background canvas -->
+  <canvas id="bg-canvas"></canvas>
+
+  <div class="wrap">
+    <header>
+      <div class="logo-area">
+        <!-- Replace the DIV.logo with <img src="path/to/logo.png"> to use client's logo -->
+        <div class="logo" id="client-logo">GD</div>
+        <div>
+          <div style="font-weight:800;letter-spacing:0.6px">Client Name</div>
+          <div style="font-size:13px;color:var(--muted)">Game Developer & Technical Artist</div>
+        </div>
+      </div>
+
+      <nav>
+        <a href="#projects">Projects</a>
+        <a href="#wallpapers">Wallpapers</a>
+        <a href="#about">About</a>
+        <a href="#contact">Contact</a>
+      </nav>
+    </header>
+
+    <!-- HERO -->
+    <main class="hero">
+      <div class="hero-left card">
+        <div class="kicker">Gaming Portfolio</div>
+        <h1>Immersive game experiences & technical showcases</h1>
+        <p class="lead">Colourful, large-format portfolio with integrated 3D background — showcase projects, walkthroughs, wallpapers and technical breakdowns. Replace images, logo and project placeholders with real content.</p>
+
+        <div class="cta-row">
+          <button class="btn btn-primary" onclick="scrollToSection('projects')">View Projects</button>
+          <button class="btn btn-outline" onclick="scrollToSection('contact')">Hire / Contact</button>
+        </div>
+
+        <div style="margin-top:18px">
+          <div style="font-weight:800;margin-bottom:8px">Latest tags</div>
+          <div class="tag-cloud">
+            <div class="tag">Unreal Engine</div>
+            <div class="tag">3D Art</div>
+            <div class="tag">Gameplay</div>
+            <div class="tag">Shaders</div>
+            <div class="tag">Optimization</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-right">
+        <div class="mock" id="mock-preview"></div>
+        <!-- Add an image behind the logo area by replacing src below or put a background-image on .logo-behind -->
+        <img src="https://images.unsplash.com/photo-1527694224015-8fcd9ef95f19?q=80&w=1400&auto=format&fit=crop&ixlib=rb-4.0.3&s=" class="logo-behind" width="220" alt="logo art" />
+      </div>
+    </main>
+
+    <!-- Projects -->
+    <section id="projects">
+      <div class="card">
+        <h2>Projects</h2>
+        <p class="lead">Placeholder projects — replace these cards with your client's project images, descriptions and links (or embed videos).</p>
+        <div class="projects-grid" id="projects-grid">
+          <!-- Project items — replace src / data attributes with real project assets -->
+          <div class="project"><img src="https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=1400&auto=format&fit=crop&ixlib=rb-4.0.3&s=" alt="project 1"><div class="meta">Project One</div></div>
+          <div class="project"><img src="https://images.unsplash.com/photo-1542204165-3d6cc9e7a3f3?q=80&w=1400&auto=format&fit=crop&ixlib=rb-4.0.3&s=" alt="project 2"><div class="meta">Project Two</div></div>
+          <div class="project"><img src="https://images.unsplash.com/photo-1535223289827-42f1e9919769?q=80&w=1400&auto=format&fit=crop&ixlib=rb-4.0.3&s=" alt="project 3"><div class="meta">Project Three</div></div>
+          <div class="project"><img src="https://images.unsplash.com/photo-1526378724096-57f0f0eafc5b?q=80&w=1400&auto=format&fit=crop&ixlib=rb-4.0.3&s=" alt="project 4"><div class="meta">Project Four</div></div>
+          <div class="project"><img src="https://images.unsplash.com/photo-1508873699372-7ae66f0fa4c7?q=80&w=1400&auto=format&fit=crop&ixlib=rb-4.0.3&s=" alt="project 5"><div class="meta">Project Five</div></div>
+          <div class="project"><img src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=1400&auto=format&fit=crop&ixlib=rb-4.0.3&s=" alt="project 6"><div class="meta">Project Six</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Wallpapers -->
+    <section id="wallpapers">
+      <div class="card">
+        <h2>Wallpapers & Art</h2>
+        <p class="lead">A separate gallery for game wallpapers and promotional art. Drag and drop or replace background images.</p>
+        <div class="wallpapers" id="wallpapers-list">
+          <div class="wallpaper" style="background-image:url('https://images.unsplash.com/photo-1501426026826-31c667bdf23d?q=80&w=1400&auto=format&fit=crop&ixlib=rb-4.0.3&s=')"></div>
+          <div class="wallpaper" style="background-image:url('https://images.unsplash.com/photo-1548095115-45697e1d4b5b?q=80&w=1400&auto=format&fit=crop&ixlib=rb-4.0.3&s=')"></div>
+          <div class="wallpaper" style="background-image:url('https://images.unsplash.com/photo-1518779578993-ec3579fee39f?q=80&w=1400&auto=format&fit=crop&ixlib=rb-4.0.3&s=')"></div>
+          <div class="wallpaper" style="background-image:url('https://images.unsplash.com/photo-1504384308090-c894fdcc538d?q=80&w=1400&auto=format&fit=crop&ixlib=rb-4.0.3&s=')"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- About + Extras -->
+    <section id="about">
+      <div class="card two-col">
+        <div>
+          <h2>About the Developer</h2>
+          <p class="lead">Write a short bio here about the client's specialties, years of experience, engines and tools used (Unreal Engine, Unity, Blender, Substance, etc.). Add links to resumes or presentations.</p>
+
+          <h3 style="margin-top:18px">Technical Highlights</h3>
+          <ul style="color:var(--muted)">
+            <li>Real-time shaders & VFX</li>
+            <li>Gameplay prototyping & systems</li>
+            <li>Optimization for mobile & low-end devices</li>
+            <li>Level design & lighting</li>
+          </ul>
+        </div>
+        <aside style="padding-left:8px">
+          <h3>Skills</h3>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
+            <div class="card" style="padding:12px">Unreal Engine — Blueprints & C++</div>
+            <div class="card" style="padding:12px">3D Art — Blender, Substance</div>
+            <div class="card" style="padding:12px">UI & Game UX</div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- Contact -->
+    <section id="contact">
+      <div class="card">
+        <h2>Contact</h2>
+        <p class="lead">Replace email address and contact links below.</p>
+        <form id="contact-form" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+          <input placeholder="Your name" style="padding:12px;border-radius:10px;border:0;background:rgba(255,255,255,0.02);color:var(--text)"/>
+          <input placeholder="Your email" style="padding:12px;border-radius:10px;border:0;background:rgba(255,255,255,0.02);color:var(--text)"/>
+          <textarea placeholder="Message" style="grid-column:1/ -1;min-height:120px;padding:12px;border-radius:10px;border:0;background:rgba(255,255,255,0.02);color:var(--text)"></textarea>
+          <button type="button" onclick="alert('Replace this with real form integration (Email / Netlify / Formspree)')" class="btn btn-primary">Send Message</button>
+        </form>
+      </div>
+    </section>
+
+    <footer>
+      Built with ❤️ — Replace with client's name. • <span id="year"></span>
+    </footer>
+
+  </div>
+
+  <script>
+    // Utility: scroll to section
+    function scrollToSection(id){
+      const el = document.getElementById(id);
+      if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
+    }
+
+    // Set current year
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // --- Three.js 3D background: colourful low-poly particles + parallax ---
+    (function(){
+      const canvas = document.getElementById('bg-canvas');
+      const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(50, innerWidth/innerHeight, 0.1, 1000);
+      camera.position.z = 60;
+
+      // Resize
+      function onWindowResize(){
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+      }
+      window.addEventListener('resize', onWindowResize);
+      onWindowResize();
+
+      // Create particles (icosahedron meshes) with colourful materials
+      const group = new THREE.Group();
+      const palette = [0x7c5cff,0x00f5a0,0xff4d6d,0x00b4ff,0xffb86b];
+      const geom = new THREE.IcosahedronGeometry(1.6,0);
+      for(let i=0;i<120;i++){
+        const mat = new THREE.MeshStandardMaterial({color:palette[i%palette.length],roughness:0.4,metalness:0.2,emissive:palette[i%palette.length],emissiveIntensity:0.06});
+        const m = new THREE.Mesh(geom,mat);
+        m.position.x = (Math.random()-0.5)*160;
+        m.position.y = (Math.random()-0.5)*90;
+        m.position.z = (Math.random()-0.5)*200;
+        m.rotation.set(Math.random()*2,Math.random()*2,Math.random()*2);
+        m.scale.setScalar(1 + Math.random()*2.8);
+        group.add(m);
+      }
+      scene.add(group);
+
+      // Lights
+      const hemi = new THREE.HemisphereLight(0xffffff,0x080820,0.8);
+      scene.add(hemi);
+      const dir = new THREE.DirectionalLight(0xffffff,0.6);
+      dir.position.set(0,20,50);
+      scene.add(dir);
+
+      // Mouse parallax
+      let mouseX = 0, mouseY=0;
+      window.addEventListener('mousemove', (e)=>{
+        mouseX = (e.clientX - innerWidth/2)/innerWidth*30;
+        mouseY = (e.clientY - innerHeight/2)/innerHeight*20;
+      });
+
+      // Animation
+      const clock = new THREE.Clock();
+      function animate(){
+        const t = clock.getElapsedTime();
+        group.rotation.y = t * 0.03 + mouseX*0.003;
+        group.rotation.x = Math.sin(t*0.1)*0.04 + mouseY*0.001;
+        // subtle float for each child
+        group.children.forEach((c,idx)=>{
+          c.rotation.x += 0.002 + (idx%3)*0.0008;
+          c.rotation.y += 0.0015 + (idx%5)*0.0006;
+        });
+        renderer.render(scene,camera);
+        requestAnimationFrame(animate);
+      }
+      animate();
+
+      // Performance: lower particles on small devices
+      if(innerWidth < 700){
+        while(group.children.length>40) group.remove(group.children[group.children.length-1]);
+      }
+
+    })();
+
+    // --- Helpers: quick functions to populate or replace content dynamically ---
+    // Replace logo element with an <img> when adding a client logo programmatically
+    function setLogoImage(url){
+      const logoEl = document.getElementById('client-logo');
+      if(!logoEl) return;
+      logoEl.innerHTML = '';
+      const img = document.createElement('img');
+      img.src = url;
+      img.alt = 'client logo';
+      logoEl.appendChild(img);
+    }
+
+    // Example: add a project card (you can call this from dev console or later code)
+    function addProject(title, imageUrl){
+      const grid = document.getElementById('projects-grid');
+      const div = document.createElement('div');
+      div.className = 'project';
+      const img = document.createElement('img'); img.src = imageUrl;
+      const meta = document.createElement('div'); meta.className = 'meta'; meta.textContent = title;
+      div.appendChild(img); div.appendChild(meta);
+      grid.appendChild(div);
+    }
+
+    // Expose to window for easy editing later
+    window.setLogoImage = setLogoImage;
+    window.addProject = addProject;
+
+  </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+ //I am a video editor and I want to generate website using a no code AI tool that can generate website using prompts. I want the design to look like exactly same as the image I have attached. Give me a //detailed prompt for this within 1000 to 1500 characters not more than that. 
